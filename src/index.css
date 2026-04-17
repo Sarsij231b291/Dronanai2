@@ -1,0 +1,568 @@
+/* ============================================
+   DRONA AI — INK WASH DESIGN SYSTEM
+   Palette: Charcoal · Cool Gray · Soft Ivory · Steel Blue
+   Fonts: Space Grotesk (headings) · DM Sans (body) · Space Mono (code)
+   ============================================ */
+
+:root {
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-family: 'DM Sans', system-ui, sans-serif;
+
+  /* INK WASH PALETTE — Light Mode */
+  --ink-charcoal:   #4A4A4A;
+  --ink-gray:       #CBCBCB;
+  --ink-ivory:      #FFFFE3;
+  --ink-steel:      #6D8196;
+
+  --bg-color:       #FFFFE3;
+  --surface-color:  #ffffff;
+  --panel-bg:       rgba(255, 255, 227, 0.7);
+  --text-primary:   #2a2a2a;
+  --text-secondary: #6D8196;
+  --border-color:   rgba(74, 74, 74, 0.15);
+
+  /* Accent from palette */
+  --accent-primary:   #4A4A4A;
+  --accent-secondary: #6D8196;
+  --accent-tertiary:  #CBCBCB;
+  --accent-warm:      #6D8196;
+
+  --success-color:  #0E836D;
+  --warning-color:  #b07d30;
+  --danger-color:   #8b3a3a;
+
+  --glass-bg:       rgba(255, 255, 227, 0.82);
+  --glass-border:   rgba(109, 129, 150, 0.2);
+  --shadow-sm:      0 1px 4px rgba(74, 74, 74, 0.1);
+  --shadow-md:      0 6px 24px rgba(74, 74, 74, 0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg:      0 20px 60px rgba(74, 74, 74, 0.18), 0 8px 20px rgba(0,0,0,0.08);
+
+  /* Dot Grid */
+  --grid-dot:  rgba(109, 129, 150, 0.18);
+  --grid-size: 30px;
+}
+
+.dark {
+  --bg-color:       #1c1c1c;
+  --surface-color:  #2a2a2a;
+  --panel-bg:       rgba(30, 30, 30, 0.85);
+  --text-primary:   #FFFFE3;
+  --text-secondary: #CBCBCB;
+  --border-color:   rgba(203, 203, 203, 0.15);
+
+  --accent-primary:   #FFFFE3;
+  --accent-secondary: #6D8196;
+  --accent-tertiary:  #CBCBCB;
+
+  --success-color:  #10b981;
+  --warning-color:  #c9a84c;
+  --danger-color:   #a54a4a;
+
+  --glass-bg:       rgba(42, 42, 42, 0.88);
+  --glass-border:   rgba(203, 203, 203, 0.12);
+  --shadow-sm:      0 1px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md:      0 6px 24px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg:      0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0,0,0,0.5);
+
+  --grid-dot:  rgba(203, 203, 203, 0.08);
+  --grid-size: 30px;
+}
+
+/* ============================================
+   RESET
+   ============================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   BODY + NOISE + DOT GRID
+   ============================================ */
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-color);
+  background-image:
+    radial-gradient(circle, var(--grid-dot) 1.5px, transparent 1.5px);
+  background-size: var(--grid-size) var(--grid-size);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+  overflow-x: hidden;
+}
+
+/* Subtle grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: var(--accent-secondary);
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.heading-1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.heading-1 .accent-word {
+  display: inline-block;
+  position: relative;
+  color: var(--ink-steel);
+}
+
+.heading-2 {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.heading-3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* Mono tag style */
+.tag-mono {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ============================================
+   GLASSMORPHISM — INK WASH VARIANT
+   ============================================ */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  border-radius: 1.5rem;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s ease,
+              background 0.5s ease,
+              border 0.5s ease;
+}
+
+.glass-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   GLOBAL KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes inkReveal {
+  0%   { clip-path: inset(0 100% 0 0); opacity: 0; }
+  100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes orb-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(60px, -40px) scale(1.1); }
+  66%  { transform: translate(-40px, 30px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+.animate-fade-in     { animation: fadeIn     0.7s ease forwards; }
+.animate-slide-up    { animation: slideUp    0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale-up    { animation: scaleUp    0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-left  { animation: slideInLeft  0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-right { animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* ============================================
+   BUTTONS — INK WASH STYLE
+   ============================================ */
+.btn-primary {
+  background: var(--ink-charcoal);
+  color: var(--ink-ivory);
+  border: none;
+  padding: 0.8rem 1.75rem;
+  border-radius: 0.65rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(74, 74, 74, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,227,0.12) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-primary:hover {
+  background: #333333;
+  box-shadow: 0 8px 28px rgba(74, 74, 74, 0.3);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn-primary:hover::after { opacity: 1; }
+
+.dark .btn-primary {
+  background: var(--ink-ivory);
+  color: var(--ink-charcoal);
+  box-shadow: 0 4px 14px rgba(255, 255, 227, 0.12);
+}
+.dark .btn-primary:hover {
+  background: #fffff0;
+  box-shadow: 0 8px 28px rgba(255, 255, 227, 0.2);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+  padding: 0.8rem 1.75rem;
+  border-radius: 0.65rem;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 0.88rem;
+  transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-color);
+  border-color: var(--ink-steel);
+  color: var(--ink-steel);
+}
+
+/* ============================================
+   CIRCULAR PROGRESS SCORE
+   ============================================ */
+.circular-progress {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background: conic-gradient(var(--ink-steel) var(--progress), var(--border-color) 0deg);
+}
+
+.circular-progress::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background-color: var(--surface-color);
+  border-radius: 50%;
+}
+
+.circular-progress span {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* ============================================
+   PROFESSIONAL LINK COPY COMPONENT
+   ============================================ */
+.link-professional-wrapper {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.link-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink-steel);
+  letter-spacing: 0.2em;
+  margin-bottom: 0.85rem;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.link-professional-box {
+  display: flex;
+  align-items: center;
+  background: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: 0.85rem;
+  height: 3.2rem;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-professional-box:hover {
+  border-color: var(--ink-steel);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.link-text-content {
+  flex: 1;
+  padding: 0 1.25rem;
+  color: var(--ink-steel);
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+
+.link-professional-btn {
+  background: var(--ink-charcoal);
+  color: var(--ink-ivory);
+  border: none;
+  padding: 0 1.75rem;
+  height: 100%;
+  border-radius: 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.link-professional-btn:hover {
+  background: #333;
+  transform: scale(1.03);
+}
+
+.link-professional-btn.copied {
+  background: var(--success-color);
+  color: white;
+}
+
+.dark .link-professional-btn {
+  background: var(--ink-ivory);
+  color: var(--ink-charcoal);
+}
+
+.link-subtitle {
+  margin-top: 0.85rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ============================================
+   DASHBOARD LAYOUT (Active Workspace Card)
+   ============================================ */
+.active-workspace-card {
+  background: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.workspace-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-steel);
+  font-family: var(--font-mono);
+}
+
+.status-indicator .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success-color);
+  animation: pulse 2s infinite;
+}
+
+.btn-icon {
+  background: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: 0.65rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  border-color: var(--ink-steel);
+  color: var(--ink-steel);
+}
+
+.workspace-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+.workspace-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.workspace-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.w-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.w-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.w-value {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
