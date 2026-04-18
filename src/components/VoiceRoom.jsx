@@ -259,170 +259,342 @@ const VoiceRoom = ({ sessionData, onFinish }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (isEvaluating) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        background: '#1c1c1c',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: '3.5rem', overflow: 'hidden'
+      }}>
+        {/* Dot Grid Background — matches the system's --grid-dot pattern */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(203,203,203,0.12) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+          maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
+        }} />
+
+        {/* Ambient ivory glow — soft, not neon */}
+        <div style={{
+          position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)',
+          width: '500px', height: '500px',
+          background: 'radial-gradient(ellipse, rgba(255,255,227,0.04) 0%, transparent 65%)',
+          pointerEvents: 'none', zIndex: 0
+        }} />
+
+        {/* Central Scanner — using ink-wash steel tones */}
+        <div style={{ position: 'relative', width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+          {/* Outer ring */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            border: '1px solid rgba(109,129,150,0.15)',
+            borderTopColor: 'rgba(109,129,150,0.6)',
+            borderRadius: '50%',
+            animation: 'iwSpin 5s linear infinite'
+          }} />
+          {/* Middle ring */}
+          <div style={{
+            position: 'absolute', inset: '22px',
+            border: '1px solid rgba(109,129,150,0.08)',
+            borderLeftColor: 'rgba(203,203,203,0.35)',
+            borderRadius: '50%',
+            animation: 'iwSpin 8s linear reverse infinite'
+          }} />
+          {/* Inner ring */}
+          <div style={{
+            position: 'absolute', inset: '44px',
+            border: '1px solid rgba(74,74,74,0.2)',
+            borderBottomColor: 'rgba(109,129,150,0.4)',
+            borderRadius: '50%',
+            animation: 'iwSpin 3.5s linear infinite'
+          }} />
+
+          {/* Square core — Drona's geometric style */}
+          <div style={{
+            width: '64px', height: '64px',
+            background: 'rgba(255,255,227,0.04)',
+            border: '1px solid rgba(203,203,203,0.2)',
+            borderRadius: '10px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'iwCorePulse 4s ease-in-out infinite',
+            zIndex: 2
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,227,0.7)" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+            </svg>
+          </div>
+
+          {/* Scanning line */}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', zIndex: 3 }}>
+            <div style={{
+              position: 'absolute', left: 0, width: '100%', height: '1.5px',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,227,0.5), transparent)',
+              animation: 'iwBeam 2.8s ease-in-out infinite'
+            }} />
+          </div>
+        </div>
+
+        {/* Text content */}
+        <div style={{ zIndex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
+          {/* Mono tag — matches system's Space Mono usage */}
+          <span style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
+            color: 'rgba(109,129,150,0.8)',
+            border: '1px solid rgba(109,129,150,0.2)',
+            padding: '0.35rem 1rem', borderRadius: '2px',
+            background: 'rgba(109,129,150,0.06)',
+            animation: 'iwBlink 3s ease-in-out infinite'
+          }}>
+            Processing Session Data
+          </span>
+
+          {/* Heading — Space Grotesk, system style */}
+          <h1 style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: '2.2rem', fontWeight: 700, margin: 0,
+            color: '#FFFFE3', letterSpacing: '-0.02em', lineHeight: 1.15
+          }}>
+            Forensic<br />
+            <span style={{ color: 'rgba(203,203,203,0.5)', fontWeight: 400 }}>Analysis</span>
+          </h1>
+
+          {/* Step list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start', marginTop: '0.5rem' }}>
+            {[
+              { label: 'Processing session transcript', done: true },
+              { label: 'Evaluating response quality', done: true },
+              { label: 'Generating competency score', done: false },
+            ].map((step, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '0.9rem',
+                animation: `iwStepIn 0.4s ease forwards ${i * 0.3}s`, opacity: 0
+              }}>
+                <div style={{
+                  width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
+                  background: step.done ? '#FFFFE3' : 'rgba(109,129,150,0.3)',
+                  boxShadow: step.done ? '0 0 8px rgba(255,255,227,0.5)' : 'none',
+                }} />
+                <span style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '0.85rem', fontWeight: step.done ? 500 : 400,
+                  color: step.done ? 'rgba(255,255,227,0.8)' : 'rgba(109,129,150,0.5)',
+                  letterSpacing: '0.01em'
+                }}>{step.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ width: '320px', maxWidth: '85vw', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.7rem' }}>
+          <div style={{ width: '100%', height: '2px', background: 'rgba(74,74,74,0.4)', borderRadius: '1px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, rgba(109,129,150,0.4), #FFFFE3, rgba(109,129,150,0.4))',
+              animation: 'iwProgress 2.5s ease-in-out infinite'
+            }} />
+          </div>
+          <span style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.55rem', fontWeight: 400, letterSpacing: '0.2em',
+            color: 'rgba(109,129,150,0.5)', textTransform: 'uppercase'
+          }}>
+            Synthesizing output...
+          </span>
+        </div>
+
+        <style>{`
+          @keyframes iwSpin { to { transform: rotate(360deg); } }
+          @keyframes iwBeam { 0% { top: 5%; opacity: 0; } 40% { opacity: 1; } 100% { top: 95%; opacity: 0; } }
+          @keyframes iwCorePulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 20px rgba(255,255,227,0.06); } }
+          @keyframes iwProgress { 0% { width: 0%; margin-left: 0; } 50% { width: 60%; margin-left: 20%; } 100% { width: 0%; margin-left: 100%; } }
+          @keyframes iwBlink { 0%,100% { opacity: 0.8; } 50% { opacity: 0.4; } }
+          @keyframes iwStepIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+        `}</style>
+      </div>
+    );
+  }
+
+
+
   if (evaluationResult) {
     const score = evaluationResult.overall_score || 0;
-    const scoreColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+    const scoreColor = score >= 75 ? '#0E836D' : score >= 50 ? '#b07d30' : '#8b3a3a';
+    const scoreLabel = score >= 75 ? 'Strong Candidate' : score >= 50 ? 'Needs Review' : 'Not Recommended';
 
     return (
-      <div className="vr-results">
-        <div className="vr-results-glow"></div>
-        <div className="vr-results-badge">✦ INTERVIEW COMPLETE ✦</div>
-        <h2 className="vr-results-heading">Forensic Summary</h2>
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: '#1c1c1c', overflowY: 'auto',
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        {/* Dot grid bg */}
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(circle, rgba(203,203,203,0.06) 1px, transparent 1px)',
+          backgroundSize: '30px 30px'
+        }} />
 
-        <div className="vr-score-section">
-          {/* Candidate Profile Avatar (Shape ID) */}
-          <div className="vr-candidate-profile animate-fade-in">
-            <div className="vr-avatar-circle">
-              {sessionData?.candidate_name?.charAt(0) || "C"}
-              <div className="vr-avatar-ring"></div>
-            </div>
-            <div className="vr-candidate-info">
-              <h3 className="vr-candidate-name">{sessionData?.candidate_name || "Candidate"}</h3>
-              <p className="vr-session-tag">Session ID: #{sessionData.session_id}</p>
-            </div>
+        <div style={{
+          position: 'relative', zIndex: 1,
+          width: '100%', maxWidth: '520px',
+          display: 'flex', flexDirection: 'column', gap: '0.75rem',
+          animation: 'iwFadeUp 0.5s ease forwards'
+        }}>
+          {/* Header status tag */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <span style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: 'rgba(109,129,150,0.7)', border: '1px solid rgba(109,129,150,0.2)',
+              padding: '0.25rem 0.9rem', borderRadius: '2px', background: 'rgba(109,129,150,0.06)'
+            }}>
+              ✦ Session Complete ✦
+            </span>
           </div>
 
-          <div className="vr-score-ring-wrap">
-            {/* Multi-layered futuristic rings */}
-            <svg viewBox="0 0 36 36" style={{ width: '220px', height: '220px', transform: 'rotate(-90deg)' }}>
-              <path fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path fill="none" stroke="rgba(16,185,129,0.08)" strokeWidth="2" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path
-                fill="none"
-                stroke={scoreColor}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray={`${score}, 100`}
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                style={{
-                  filter: `drop-shadow(0 0 12px ${scoreColor})`,
-                  transition: 'stroke-dasharray 2s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-              />
-            </svg>
-            <div className="vr-score-inner">
-              <div className="vr-score-main">
-                <span className="vr-score-num" style={{ color: scoreColor }}>{score}</span>
-                <span className="vr-score-pct">%</span>
+          {/* Title */}
+          <h1 style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: '1.7rem', fontWeight: 700, color: '#FFFFE3',
+            letterSpacing: '-0.03em', lineHeight: 1.1, textAlign: 'center', margin: 0
+          }}>
+            Forensic Summary
+          </h1>
+
+          {/* Candidate + Score card */}
+          <div style={{
+            background: 'rgba(42,42,42,0.6)', border: '1px solid rgba(203,203,203,0.1)',
+            borderRadius: '12px', padding: '1rem 1.2rem',
+            display: 'flex', alignItems: 'center', gap: '1rem',
+            backdropFilter: 'blur(12px)'
+          }}>
+            {/* Avatar */}
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '10px', flexShrink: 0,
+              background: 'rgba(74,74,74,0.5)', border: '1px solid rgba(203,203,203,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '1.3rem', fontWeight: 700, color: '#FFFFE3'
+            }}>
+              {sessionData?.candidate_name?.charAt(0)?.toUpperCase() || 'C'}
+            </div>
+
+            {/* Name + session */}
+            <div style={{ flex: 1 }}>
+              <h3 style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '1rem', fontWeight: 600, color: '#FFFFE3', margin: '0 0 0.15rem'
+              }}>
+                {sessionData?.candidate_name || 'Candidate'}
+              </h3>
+              <span style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '0.55rem', letterSpacing: '0.12em', color: 'rgba(109,129,150,0.6)',
+                textTransform: 'uppercase'
+              }}>
+                Session #{sessionData?.session_id}
+              </span>
+            </div>
+
+            {/* Score ring */}
+            <div style={{ position: 'relative', width: '76px', height: '76px', flexShrink: 0 }}>
+              <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                <path fill="none" stroke="rgba(203,203,203,0.08)" strokeWidth="3"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path fill="none" stroke={scoreColor} strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${score}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  style={{ filter: `drop-shadow(0 0 6px ${scoreColor}80)`, transition: 'stroke-dasharray 1.5s ease' }} />
+              </svg>
+              <div style={{
+                position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '1px'
+              }}>
+                <span style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: '1.25rem', fontWeight: 700, color: scoreColor, lineHeight: 1
+                }}>{score}</span>
+                <span style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '0.4rem', color: 'rgba(203,203,203,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase'
+                }}>Score</span>
               </div>
-              <div className="vr-score-lbl">FINAL SCORE</div>
             </div>
           </div>
-        </div>
 
-        <div className="vr-feedback-card">
-          <div className="vr-feedback-header">
-            <span className="vr-feedback-icon">⬡</span>
-            AI Forensic Evaluation
+          {/* Verdict chip */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.6rem',
+            background: 'rgba(42,42,42,0.4)', border: `1px solid ${scoreColor}40`,
+            borderRadius: '8px', padding: '0.6rem 1rem'
+          }}>
+            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: scoreColor, boxShadow: `0 0 8px ${scoreColor}`, flexShrink: 0 }} />
+            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontWeight: 600, color: '#FFFFE3' }}>
+              {scoreLabel}
+            </span>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', color: 'rgba(203,203,203,0.5)', marginLeft: 'auto' }}>
+              AI Verdict
+            </span>
           </div>
-          <p className="vr-feedback-text">{evaluationResult.feedback || 'Evaluation completed successfully.'}</p>
+
+          {/* Feedback card */}
+          <div style={{
+            background: 'rgba(42,42,42,0.5)', border: '1px solid rgba(203,203,203,0.1)',
+            borderRadius: '12px', padding: '1.2rem', backdropFilter: 'blur(12px)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(109,129,150,0.7)" strokeWidth="2">
+                <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+              </svg>
+              <span style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.18em',
+                color: 'rgba(109,129,150,0.7)', textTransform: 'uppercase'
+              }}>
+                AI Forensic Evaluation
+              </span>
+            </div>
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '0.85rem', lineHeight: 1.7, color: 'rgba(255,255,227,0.75)',
+              margin: 0
+            }}>
+              {evaluationResult.feedback || 'Evaluation completed successfully.'}
+            </p>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={onFinish}
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              background: '#FFFFE3', color: '#1c1c1c',
+              border: 'none', borderRadius: '8px',
+              padding: '0.75rem 1.5rem', fontSize: '0.85rem', fontWeight: 700,
+              cursor: 'pointer', letterSpacing: '0.02em',
+              transition: 'all 0.2s ease',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              width: '100%'
+            }}
+            onMouseEnter={e => { e.target.style.background = '#f0f0d0'; e.target.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.target.style.background = '#FFFFE3'; e.target.style.transform = 'translateY(0)'; }}
+          >
+            Return to Dashboard
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
-        <button className="vr-done-btn" onClick={onFinish}>Return to Dashboard →</button>
+
         <style>{`
-          .vr-results { max-width: 750px; margin: 1rem auto; padding: 3rem 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 2.5rem; position: relative; background: linear-gradient(160deg, #071a10 0%, #0a1f13 50%, #071510 100%); border: 1px solid rgba(16,185,129,0.2); border-radius: 2.5rem; overflow: hidden; }
-          .vr-results-glow { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 500px; height: 400px; background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%); pointer-events: none; }
-          .vr-results-badge { font-size: 0.7rem; font-weight: 900; letter-spacing: 0.3em; color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 0.5rem 1.5rem; border-radius: 2rem; background: rgba(16,185,129,0.1); }
-          .vr-results-heading { font-size: 2.5rem; font-weight: 900; background: linear-gradient(135deg, #fff 40%, #6ee7b7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
-          
-          .vr-score-section { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3rem; }
-          
-          .vr-candidate-profile { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-          .vr-avatar-circle {
-             width: 100px; height: 100px; border-radius: 50%;
-             background: linear-gradient(135deg, #0E836D, #10b981);
-             display: flex; align-items: center; justify-content: center;
-             font-size: 2.5rem; font-weight: 900; color: white;
-             position: relative; box-shadow: 0 10px 30px rgba(14,131,109,0.3);
-          }
-          .vr-avatar-ring {
-             position: absolute; inset: -8px; border: 2px solid rgba(14,131,109,0.2); border-radius: 50%;
-             animation: vrBlink 2s infinite;
-          }
-          .vr-candidate-info { text-align: center; }
-          .vr-candidate-name { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 0.2rem; }
-          .vr-session-tag { font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; }
- 
-          .vr-score-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
-          .vr-score-inner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
-          
-          .vr-score-main { display: flex; align-items: baseline; gap: 2px; }
-          .vr-score-num { font-size: 5rem; font-weight: 950; line-height: 1; font-family: 'Inter', sans-serif; letter-spacing: -0.05em; filter: drop-shadow(0 0 15px rgba(14,131,109,0.2)); }
-          .vr-score-pct { font-size: 1.5rem; font-weight: 800; color: rgba(255,255,255,0.3); }
-          .vr-score-lbl { font-size: 0.65rem; font-weight: 900; letter-spacing: 0.25em; color: rgba(255,255,255,0.5); }
-          
-          .vr-feedback-card { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(14,131,109,0.15); border-radius: 2rem; padding: 2.5rem; backdrop-filter: blur(10px); }
-          .vr-feedback-header { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; font-weight: 900; letter-spacing: 0.15em; color: #0E836D; margin-bottom: 1.2rem; }
-          .vr-feedback-text { color: rgba(255,255,255,0.75); line-height: 1.8; font-size: 1rem; }
-          .vr-done-btn { background: linear-gradient(135deg, #0E836D, #10b981); color: white; border: none; padding: 1.2rem 3.5rem; border-radius: 999px; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 15px 40px rgba(14,131,109,0.3); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); letter-spacing: 0.05em; }
-          .vr-done-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 20px 50px rgba(14,131,109,0.5); }
-
-          .evaluation-premium {
-            position: absolute; inset: 0; background: radial-gradient(circle at center, #0a1f13, #07080a);
-            display: flex; align-items: center; justify-content: center; z-index: 1000; overflow: hidden;
-          }
-          .neural-grid {
-            position: absolute; inset: 0; 
-            background-image: linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: radial-gradient(circle at center, black, transparent 80%);
-            animation: gridMove 20s linear infinite;
-          }
-          @keyframes gridMove { from { background-position: 0 0; } to { background-position: 50px 50px; } }
-          
-          .eval-premium-content { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 4rem; position: relative; }
-          
-          /* Neural Scanner */
-          .neural-scanner-wrap { position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; }
-          .neural-orbit { position: absolute; border: 1px solid rgba(14,131,109,0.1); border-radius: 50%; }
-          .orbit-1 { inset: 0; border-top-color: #0E836D; border-top-width: 2px; animation: vrSpin 8s linear infinite; }
-          .orbit-2 { inset: 20px; border-right-color: #10b981; border-right-width: 1px; animation: vrSpin 12s linear reverse infinite; opacity: 0.5; }
-          .orbit-3 { inset: 40px; border-bottom-color: #0E836D; border-bottom-width: 1px; animation: vrSpin 5s linear infinite; opacity: 0.3; }
-          
-          .neural-hexagon {
-            width: 100px; height: 100px; background: rgba(14,131,109,0.1); 
-            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(16,185,129,0.3); animation: hexPulse 3s ease-in-out infinite;
-          }
-          .hex-inner { animation: vrPulse 2s infinite; opacity: 0.8; }
-          
-          .scanning-beam {
-            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, #10b981, transparent);
-            box-shadow: 0 0 15px #10b981; animation: scanBeam 2.5s ease-in-out infinite;
-            z-index: 5;
-          }
-
-          /* Status Group */
-          .eval-status-group { text-align: center; }
-          .eval-main-title { 
-            font-size: 1.5rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;
-            background: linear-gradient(to right, #fff, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 2rem;
-          }
-          
-          .eval-step-tracker { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
-          .eval-step { display: flex; align-items: center; gap: 1rem; opacity: 0.3; transition: all 0.5s; }
-          .eval-step.active { opacity: 1; filter: drop-shadow(0 0 8px rgba(16,185,129,0.4)); }
-          .eval-step.processing { opacity: 0.6; animation: stepFade 1.5s infinite alternate; }
-          
-          .step-dot { width: 6px; height: 6px; background: #0E836D; border-radius: 50%; }
-          .eval-step.active .step-dot { background: #10b981; transform: scale(1.5); }
-          .step-label { font-size: 0.75rem; font-weight: 700; color: white; letter-spacing: 0.05em; }
-
-          /* Progress Bar */
-          .eval-progress-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-          .eval-progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
-          .eval-progress-fill { height: 100%; width: 40%; background: linear-gradient(90deg, #0E836D, #10b981); animation: premiumProgress 4s ease-in-out infinite; }
-          .eval-percentage { font-size: 0.6rem; font-weight: 900; color: #0E836D; letter-spacing: 0.3em; }
-
-          @keyframes vrSpin { to { transform: rotate(360deg); } }
-          @keyframes vrPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.6; } }
-          @keyframes hexPulse { 0%, 100% { transform: scale(1); border-color: rgba(16,185,129,0.3); } 50% { transform: scale(1.05); border-color: rgba(16,185,129,0.6); } }
-          @keyframes scanBeam { 0% { top: 10%; opacity: 0; } 50% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
-          @keyframes premiumProgress { 0% { transform: translateX(-100%); width: 20%; } 50% { width: 50%; } 100% { transform: translateX(400%); width: 20%; } }
-          @keyframes stepFade { from { opacity: 0.3; } to { opacity: 0.8; } }
-          @keyframes vrBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+          @keyframes iwFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         `}</style>
       </div>
     );

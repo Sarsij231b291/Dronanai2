@@ -173,14 +173,47 @@ const SessionListItem = ({ session }) => {
 
 const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) => {
   const [showModal, setShowModal] = useState(false);
-  const [newInterview, setNewInterview] = useState({ title: '', description: '', duration: 15 });
+  const [newInterview, setNewInterview] = useState({ title: '', description: '', duration: 5, min_score: 75 });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [allSessions, setAllSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [rankTab, setRankTab] = useState('ALL');
 
   const filteredInterviews = interviews.filter(i =>
     i.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Fetch sessions for all interviews for the System Ranked Matches section
+  useEffect(() => {
+    if (!interviews || interviews.length === 0) return;
+    setSessionsLoading(true);
+    const API_BASE = import.meta.env.VITE_API_URL || '';
+    Promise.all(
+      interviews.map(iv =>
+        fetch(`${API_BASE}/api/interviews/session/${iv.id}`)
+          .then(r => r.json())
+          .then(d => (d.sessions || []).map(s => ({ ...s, jobTitle: iv.title })))
+          .catch(() => [])
+      )
+    ).then(results => {
+      const merged = results.flat().sort((a, b) => (b.overall_score || 0) - (a.overall_score || 0));
+      setAllSessions(merged);
+    }).finally(() => setSessionsLoading(false));
+  }, [interviews]);
+
+  const getSessionCat = (score) => {
+    if (score >= 75) return { label: 'PASSED', color: '#0E836D' };
+    if (score >= 50) return { label: 'REVIEW', color: '#b07d30' };
+    return { label: 'REJECTED', color: '#8b3a3a' };
+  };
+
+  const filteredSessions = allSessions.filter(s => {
+    if (rankTab === 'ALL') return true;
+    return getSessionCat(s.overall_score || 0).label === rankTab;
+  });
+
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -189,7 +222,7 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
       const data = await api.post('/api/interviews', newInterview);
       if (data.id) {
         setShowModal(false);
-        setNewInterview({ title: '', description: '', duration: 15 });
+        setNewInterview({ title: '', description: '', duration: 5, min_score: 75 });
         onRefreshInterviews();
       }
     } catch (e) {
@@ -250,14 +283,33 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
               {interview.duration_minutes} MINS â€¢ AI VOICE
             </div>
           </div>
-          {/* Hover Actions */}
+          {/* Hover Actions — Ink Wash professional overlay */}
           <div className="folder-hover-overlay">
-            <button className="folder-action-btn btn-view" onClick={() => setSelectedJobId(interview.id)}>
-              VIEW PERFORMANCE
-            </button>
-            <button className="folder-action-btn btn-launch" onClick={() => onStartTest(interview.id)}>
-              LAUNCH TEST
-            </button>
+            <div className="hover-job-label">{interview.title}</div>
+            <div className="hover-meta">{interview.duration_minutes} min · AI Voice Interview</div>
+            <div className="hover-actions">
+              <button className="fh-btn fh-view" onClick={() => setSelectedJobId(interview.id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
+                View Performance
+              </button>
+              <button className="fh-btn fh-launch" onClick={() => onStartTest(interview.id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                Launch Interview
+              </button>
+              <button
+                className="fh-btn fh-copylink"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const link = `${window.location.origin}?apply=${interview.id}`;
+                  navigator.clipboard.writeText(link);
+                  e.currentTarget.textContent = '✓ Link Copied!';
+                  setTimeout(() => { e.currentTarget.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Candidate Link'; }, 2000);
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                Copy Candidate Link
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -283,16 +335,75 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
 
           <div className="dashboard-header">
             <div>
-              <h2 className="heading-2">MY WORKFLOWS</h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Automated Talent Intelligence Dashboard.</p>
+              <h2 className="heading-2">Interview Campaigns</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Manage your AI-driven interview pipelines.</p>
             </div>
           </div>
+
 
           <div className="campaign-blocks-grid">
             <FolderBlock isNew={true} />
             {filteredInterviews.map((interview) => (
               <FolderBlock key={interview.id} interview={interview} />
             ))}
+          </div>
+
+          {/* System Ranked Matches */}
+          <div className="ranked-section">
+            <div className="ranked-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <h2 className="heading-2" style={{ margin: 0 }}>System Ranked Matches</h2>
+                <div className="tabs-container">
+                  {['ALL', 'PASSED', 'REVIEW', 'REJECTED'].map(tab => (
+                    <button
+                      key={tab}
+                      className={`tab-btn ${rankTab === tab ? 'active' : ''}`}
+                      onClick={() => setRankTab(tab)}
+                    >{tab}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {sessionsLoading ? (
+              <p style={{ color: 'var(--text-secondary)', padding: '2rem 0' }}>Loading candidates...</p>
+            ) : filteredSessions.length === 0 ? (
+              <div className="ranked-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                <p>No interview sessions recorded yet.</p>
+              </div>
+            ) : (
+              <div className="ranked-grid">
+                {filteredSessions.map((s, i) => {
+                  const cat = getSessionCat(s.overall_score || 0);
+                  return (
+                    <div className="ranked-card" key={s.id || i}>
+                      <div className="rc-top">
+                        <div className="rc-avatar" style={{ background: `linear-gradient(135deg, ${cat.color}33, ${cat.color}11)`, border: `1px solid ${cat.color}44` }}>
+                          {s.candidate_name?.charAt(0)?.toUpperCase() || 'C'}
+                        </div>
+                        <div className="rc-info">
+                          <div className="rc-name">{s.candidate_name}</div>
+                          <div className="rc-job">{s.jobTitle}</div>
+                          <div className="rc-status" style={{ color: cat.color }}>{cat.label}</div>
+                        </div>
+                        <div className="rc-ring-wrap">
+                          <svg viewBox="0 0 36 36" className="rc-ring-svg">
+                            <path fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path fill="none" stroke={cat.color} strokeWidth="3" strokeLinecap="round"
+                              strokeDasharray={`${s.overall_score || 0}, 100`}
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              style={{ filter: `drop-shadow(0 0 4px ${cat.color}80)` }} />
+                          </svg>
+                          <div className="rc-score" style={{ color: cat.color }}>{s.overall_score || 0}</div>
+                        </div>
+                      </div>
+                      <div className="rc-date">Session · {new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -335,8 +446,27 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
                   type="number"
                   value={newInterview.duration}
                   onChange={(e) => setNewInterview({ ...newInterview, duration: e.target.value })}
-                  min="5" max="60"
+                  min="1" max="15"
+                  placeholder="1 – 15 minutes"
                 />
+              </div>
+              <div className="form-group">
+                <label>Minimum Score Threshold (%)</label>
+                <input
+                  type="number"
+                  value={newInterview.min_score ?? 75}
+                  onChange={(e) => setNewInterview({ ...newInterview, min_score: Number(e.target.value) })}
+                  min="0" max="100"
+                  placeholder="e.g. 75"
+                />
+                <p style={{
+                  margin: '0.4rem 0 0',
+                  fontSize: '0.75rem',
+                  color: 'rgba(109,129,150,0.7)',
+                  lineHeight: 1.5
+                }}>
+                  Candidates scoring below this will be flagged as <em>Not Recommended</em>. Set 0 to disable filtering.
+                </p>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
@@ -449,28 +579,130 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
         .create-plus { font-size: 3rem; font-weight: 300; margin-bottom: 0.5rem; color: var(--accent-primary); }
         .new-folder .folder-footer { color: var(--accent-tertiary); font-size: 0.85rem; font-weight: 600; }
 
-        /* Hover Overlay */
+        /* Hover Overlay — Ink Wash Professional */
         .folder-hover-overlay {
-          position: absolute; inset: 0; background: rgba(10,0,16,0.88);
-          backdrop-filter: blur(8px); display: flex; flex-direction: column;
-          justify-content: center; align-items: center; gap: 1rem; padding: 2rem;
-          opacity: 0; transition: all 0.3s; pointer-events: none; border-radius: 24px;
+          position: absolute; inset: 0;
+          background: linear-gradient(160deg, rgba(28,28,28,0.97) 0%, rgba(20,20,20,0.99) 100%);
+          backdrop-filter: blur(12px);
+          display: flex; flex-direction: column;
+          justify-content: center; align-items: flex-start;
+          gap: 0.6rem; padding: 1.75rem;
+          opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+          pointer-events: none; border-radius: 24px;
+          border: 1px solid rgba(203,203,203,0.08);
         }
         .folder-card:hover .folder-hover-overlay { opacity: 1; pointer-events: auto; }
-        .folder-action-btn {
-          width: 100%; padding: 0.8rem; border-radius: 12px; font-weight: 900;
-          font-size: 0.75rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s;
+        .hover-job-label {
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 0.95rem; font-weight: 700; color: #FFFFE3;
+          letter-spacing: -0.01em; margin-bottom: 0.1rem;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
         }
-        .btn-view {
-          background: rgba(255,255,255,0.12); color: white;
-          border: 1px solid rgba(255,255,255,0.25);
+        .hover-meta {
+          font-family: 'Space Mono', monospace;
+          font-size: 0.55rem; letter-spacing: 0.15em; color: rgba(109,129,150,0.6);
+          text-transform: uppercase; margin-bottom: 0.8rem;
         }
-        .btn-launch {
-          background: linear-gradient(135deg, #ff0077, #e87ba0);
-          color: white; border: none;
-          box-shadow: 0 4px 16px rgba(255,0,119,0.35);
+        .hover-actions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+        .fh-btn {
+          width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+          padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600;
+          font-size: 0.78rem; letter-spacing: 0.02em; cursor: pointer;
+          transition: all 0.2s ease; font-family: 'DM Sans', sans-serif;
         }
-        .folder-action-btn:hover { transform: scale(1.05); }
+        .fh-view {
+          background: rgba(255,255,227,0.06); color: rgba(255,255,227,0.8);
+          border: 1px solid rgba(255,255,227,0.15);
+        }
+        .fh-view:hover { background: rgba(255,255,227,0.12); border-color: rgba(255,255,227,0.3); color: #FFFFE3; transform: translateY(-1px); }
+        .fh-launch {
+          background: rgba(109,129,150,0.15); color: #6D8196;
+          border: 1px solid rgba(109,129,150,0.3);
+        }
+        .fh-launch:hover { background: rgba(109,129,150,0.25); border-color: rgba(109,129,150,0.5); color: #a8bcc9; transform: translateY(-1px); }
+        .fh-copylink {
+          background: transparent; color: rgba(109,129,150,0.55);
+          border: 1px dashed rgba(109,129,150,0.22);
+          font-size: 0.72rem; padding: 0.4rem 0.75rem;
+          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        }
+        .fh-copylink:hover { background: rgba(109,129,150,0.08); color: rgba(109,129,150,0.85); border-color: rgba(109,129,150,0.4); transform: none; }
+
+        /* Apply Link Banner */
+        .apply-link-banner {
+          display: flex; align-items: center; justify-content: space-between;
+          background: rgba(109,129,150,0.06); border: 1px solid rgba(109,129,150,0.18);
+          border-radius: 10px; padding: 0.7rem 1.1rem; margin-bottom: 1.5rem;
+          gap: 1rem; flex-wrap: wrap;
+        }
+        .apply-link-left { display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; overflow: hidden; }
+        .apply-link-left svg { color: rgba(109,129,150,0.7); flex-shrink: 0; }
+        .apply-link-label {
+          font-family: 'Space Mono', monospace; font-size: 0.6rem; font-weight: 700;
+          letter-spacing: 0.15em; text-transform: uppercase; color: rgba(109,129,150,0.7);
+          white-space: nowrap; flex-shrink: 0;
+        }
+        .apply-link-url {
+          font-family: 'Space Mono', monospace; font-size: 0.72rem;
+          color: rgba(255,255,227,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .apply-copy-btn {
+          display: flex; align-items: center; gap: 0.4rem;
+          background: rgba(255,255,227,0.08); border: 1px solid rgba(255,255,227,0.15);
+          color: #FFFFE3; border-radius: 6px; padding: 0.4rem 0.85rem;
+          font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+          transition: all 0.2s ease; font-family: 'DM Sans', sans-serif;
+        }
+        .apply-copy-btn:hover { background: rgba(255,255,227,0.14); border-color: rgba(255,255,227,0.3); }
+
+        /* Tabs (System Ranked Matches) */
+        .tabs-container { display: flex; align-items: center; gap: 0.35rem; }
+        .tab-btn {
+          padding: 0.3rem 0.85rem; border-radius: 999px;
+          font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+          cursor: pointer; transition: all 0.2s ease;
+          font-family: 'DM Sans', sans-serif;
+          background: rgba(109,129,150,0.08);
+          border: 1px solid rgba(109,129,150,0.2);
+          color: rgba(109,129,150,0.7);
+        }
+        .tab-btn:hover { background: rgba(109,129,150,0.16); color: rgba(255,255,227,0.75); border-color: rgba(109,129,150,0.35); }
+        .tab-btn.active {
+          background: #FFFFE3; color: #1c1c1c;
+          border-color: #FFFFE3; font-weight: 800;
+        }
+
+        /* System Ranked Matches */
+        .ranked-section { margin-top: 4rem; }
+        .ranked-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .ranked-empty { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem; color: var(--text-secondary); }
+        .ranked-grid {
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1rem;
+        }
+        .ranked-card {
+          background: var(--surface-color); border: 1.5px solid var(--border-color);
+          border-radius: 16px; padding: 1.25rem 1.5rem;
+          transition: all 0.25s ease; display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .ranked-card:hover { border-color: rgba(109,129,150,0.4); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .rc-top { display: flex; align-items: center; gap: 1rem; }
+        .rc-avatar {
+          width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: white;
+        }
+        .rc-info { flex: 1; min-width: 0; }
+        .rc-name { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rc-job { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rc-status { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; margin-top: 0.25rem; }
+        .rc-ring-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+        .rc-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .rc-score {
+          position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+          font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 700;
+        }
+        .rc-date { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: rgba(109,129,150,0.5); letter-spacing: 0.05em; }
 
         /* Performance View */
         .performance-view { padding-top: 1rem; }
@@ -569,10 +801,11 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
         }
         @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-content {
-          width: 100%; max-width: 600px; padding: 4rem; border-radius: 2.5rem;
+          width: 100%; max-width: 480px; padding: 2rem 2rem 1.5rem; border-radius: 1.5rem;
           background: var(--surface-color);
           border: 1.5px solid var(--border-color);
           box-shadow: var(--shadow-lg); position: relative;
+          max-height: 90vh; overflow-y: auto;
         }
         .modal-close-btn {
           position: absolute; top: 1.5rem; right: 1.5rem;
@@ -582,10 +815,10 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
         }
         .modal-close-btn:hover { color: #ef4444; transform: rotate(90deg); }
         .modal-content h3 {
-          font-size: 1.8rem; font-weight: 900; color: var(--text-primary);
-          margin-bottom: 2rem; letter-spacing: -0.03em;
+          font-size: 1.3rem; font-weight: 800; color: var(--text-primary);
+          margin-bottom: 1.25rem; letter-spacing: -0.02em;
         }
-        .form-group { margin-bottom: 1.75rem; }
+        .form-group { margin-bottom: 1rem; }
         .form-group label {
           display: block; font-size: 0.72rem; font-weight: 800;
           color: var(--accent-primary); margin-bottom: 0.6rem;
@@ -594,8 +827,8 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
         .form-group input, .form-group textarea {
           width: 100%; background: var(--bg-color);
           border: 1.5px solid var(--border-color);
-          border-radius: 1rem; padding: 1rem 1.25rem;
-          color: var(--text-primary); font-size: 1rem;
+          border-radius: 0.75rem; padding: 0.65rem 1rem;
+          color: var(--text-primary); font-size: 0.9rem;
           transition: all 0.3s; font-family: inherit;
         }
         .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-secondary); }
@@ -603,10 +836,10 @@ const InterviewDashboard = ({ interviews, onRefreshInterviews, onStartTest }) =>
           outline: none; border-color: var(--accent-primary);
           box-shadow: 0 0 0 4px rgba(255,0,119,0.12);
         }
-        .modal-actions { display: flex; gap: 1.5rem; margin-top: 3rem; }
+        .modal-actions { display: flex; gap: 1rem; margin-top: 1.25rem; }
         .modal-actions button {
-          flex: 1; padding: 1rem; border-radius: 1.25rem; font-weight: 900;
-          font-size: 0.9rem; cursor: pointer; transition: all 0.3s; letter-spacing: 0.04em;
+          flex: 1; padding: 0.75rem; border-radius: 0.85rem; font-weight: 700;
+          font-size: 0.85rem; cursor: pointer; transition: all 0.3s; letter-spacing: 0.03em;
         }
         .btn-secondary {
           background: var(--bg-color); color: var(--text-secondary);
