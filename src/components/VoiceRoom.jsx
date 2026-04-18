@@ -98,13 +98,30 @@ const VoiceRoom = ({ sessionData, onFinish }) => {
     try {
       console.log("DEBUG: Starting face detection scan...");
       if (videoRef.current) {
-        const faces = await faceModel.estimateFaces(videoRef.current, false);
-        console.log("DEBUG: Scan complete. Faces detected:", faces.length);
+        // Wait until the video has valid dimensions (prevents WebGL 0x0 texture error)
+        const video = videoRef.current;
+        if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+          console.warn("DEBUG: Video not ready yet, waiting...");
+          await new Promise((resolve) => {
+            const onReady = () => { video.removeEventListener('loadeddata', onReady); resolve(); };
+            video.addEventListener('loadeddata', onReady);
+            // Fallback timeout in case it's already loaded but readyState is stale
+            setTimeout(resolve, 2000);
+          });
+        }
 
-        if (faces.length > 1) {
-          setFaceError(`Multiple faces detected (${faces.length})! Please ensure you are alone in the frame.`);
-          setIsCheckingFace(false);
-          return;
+        // Double-check dimensions after waiting
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          const faces = await faceModel.estimateFaces(video, false);
+          console.log("DEBUG: Scan complete. Faces detected:", faces.length);
+
+          if (faces.length > 1) {
+            setFaceError(`Multiple faces detected (${faces.length})! Please ensure you are alone in the frame.`);
+            setIsCheckingFace(false);
+            return;
+          }
+        } else {
+          console.warn("DEBUG: Skipping face check — camera not producing frames yet");
         }
       }
 
