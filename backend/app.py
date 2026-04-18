@@ -15,10 +15,21 @@ from prompts import HACKATHON_PARSE_AND_SCORE, INTERVIEW_PROMPT_GENERATOR, INTER
 load_dotenv(override=True)
 
 app = Flask(__name__)
-CORS(app)
+
+# Allow CORS from localhost (dev) and any Vercel deployment
+CORS(app, origins=[
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://*.vercel.app',
+], supports_credentials=True)
 
 # Initialize database on startup
 database.init_db()
+
+# ── Health Check (used by Render to verify the service is alive) ──────────
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'ok', 'service': 'drona-ai-backend'})
 
 def extract_text_from_pdf(file_bytes):
     try:
@@ -161,11 +172,11 @@ def get_workspaces():
 @app.route('/api/workspaces/public/<int:workspace_id>', methods=['GET'])
 def get_public_workspace(workspace_id):
     conn = database.get_db_connection()
-    workspace = conn.execute('SELECT id, title, description FROM workspaces WHERE id = ?', (workspace_id,)).fetchone()
+    row = database._fetchone(conn, database._q('SELECT id, title, description FROM workspaces WHERE id = ?'), (workspace_id,))
     conn.close()
-    if not workspace:
+    if not row:
         return jsonify({"error": "Not found"}), 404
-    return jsonify({"workspace": dict(workspace)})
+    return jsonify({"workspace": row})
 
 @app.route('/api/workspaces', methods=['POST'])
 def create_workspace():
@@ -330,11 +341,11 @@ def get_all_interviews_route():
 @app.route('/api/interviews/public/<int:interview_id>', methods=['GET'])
 def get_public_interview(interview_id):
     conn = database.get_db_connection()
-    interview = conn.execute('SELECT id, title, description, duration_minutes as duration FROM mock_interviews WHERE id = ?', (interview_id,)).fetchone()
+    interview = database._fetchone(conn, database._q('SELECT id, title, description, duration_minutes as duration FROM mock_interviews WHERE id = ?'), (interview_id,))
     conn.close()
     if not interview:
         return jsonify({"error": "Not found"}), 404
-    return jsonify({"interview": dict(interview)})
+    return jsonify({"interview": interview})
 
 @app.route('/api/interviews', methods=['POST'])
 def create_interview_route():
@@ -363,7 +374,7 @@ def get_vapi_config():
     
     # 1. Get Interview Details
     conn = database.get_db_connection()
-    interview = conn.execute('SELECT * FROM mock_interviews WHERE id = ?', (interview_id,)).fetchone()
+    interview = database._fetchone(conn, database._q('SELECT * FROM mock_interviews WHERE id = ?'), (interview_id,))
     conn.close()
     
     if not interview:
@@ -418,12 +429,12 @@ def finish_interview_session(session_id):
     
     # 1. Get Session & Interview Details
     conn = database.get_db_connection()
-    session = conn.execute('SELECT * FROM interview_sessions WHERE id = ?', (session_id,)).fetchone()
+    session = database._fetchone(conn, database._q('SELECT * FROM interview_sessions WHERE id = ?'), (session_id,))
     if not session:
         conn.close()
         return jsonify({"error": "Session not found"}), 404
         
-    interview = conn.execute('SELECT * FROM mock_interviews WHERE id = ?', (session['interview_id'],)).fetchone()
+    interview = database._fetchone(conn, database._q('SELECT * FROM mock_interviews WHERE id = ?'), (session['interview_id'],))
     conn.close()
 
     # 2. Evaluate using LLM
@@ -462,7 +473,7 @@ def apply_to_interview(interview_id):
     
     # 1. Get Interview Details
     conn = database.get_db_connection()
-    interview = conn.execute('SELECT * FROM mock_interviews WHERE id = ?', (interview_id,)).fetchone()
+    interview = database._fetchone(conn, database._q('SELECT * FROM mock_interviews WHERE id = ?'), (interview_id,))
     conn.close()
     
     if not interview:
@@ -507,7 +518,7 @@ def apply_to_workspace(workspace_id):
     
     # 1. Get Workspace Details
     conn = database.get_db_connection()
-    workspace = conn.execute('SELECT * FROM workspaces WHERE id = ?', (workspace_id,)).fetchone()
+    workspace = database._fetchone(conn, database._q('SELECT * FROM workspaces WHERE id = ?'), (workspace_id,))
     conn.close()
     
     if not workspace:
