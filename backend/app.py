@@ -190,7 +190,7 @@ def create_workspace():
     w_id = database.create_workspace(title, description, min_score, recruiter_id=rid)
     
     # Automatically generate a linked Mock Interview Campaign (1 minute)
-    i_id = database.create_mock_interview(title, description, 1, recruiter_id=rid)
+    i_id = database.create_mock_interview(title, description, 2, recruiter_id=rid)
     database.link_workspace_interview(w_id, i_id)
     
     return jsonify({"id": w_id, "workspace_id": w_id, "interview_id": i_id, "title": title, "description": description, "min_score": min_score}), 201
