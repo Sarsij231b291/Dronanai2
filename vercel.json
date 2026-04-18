@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR_RENDER_BACKEND_URL.onrender.com/api/:path*"
+      "destination": "https://dronanai2.onrender.com/api/:path*"
     }
   ]
 }
