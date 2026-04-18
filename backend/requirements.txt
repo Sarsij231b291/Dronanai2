@@ -1,0 +1,9 @@
+Flask==3.0.3
+flask-cors==4.0.1
+PyMuPDF
+python-dotenv==1.0.1
+anthropic==0.25.1
+google-generativeai==0.8.2
+resend
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
